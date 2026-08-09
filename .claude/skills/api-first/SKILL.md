@@ -1,3 +1,8 @@
+---
+name: api-first
+description: Make the OpenAPI contract (docs/openapi.yaml/json) the source of truth that implementation, DTOs, controllers, and tests must conform to.
+---
+
 # API-First Development Instructions
 
 ## Objective

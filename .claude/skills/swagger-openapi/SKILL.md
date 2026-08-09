@@ -1,3 +1,8 @@
+---
+name: swagger-openapi
+description: Expose complete, accurate OpenAPI/Swagger UI documentation for every REST endpoint in this project.
+---
+
 # Swagger and OpenAPI Documentation Instructions
 
 ## Objective

@@ -1,3 +1,8 @@
+---
+name: service-testing
+description: Add comprehensive service-layer unit tests covering 100% of paths, plus a Cucumber HTML report.
+---
+
 # Service Testing and Cucumber HTML Report Instructions
 
 ## Objective

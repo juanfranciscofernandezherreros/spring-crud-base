@@ -1,3 +1,8 @@
+---
+name: cucumber-api-testing
+description: Add Cucumber end-to-end API tests (real HTTP, ~80% of paths) covering success, validation, not-found, and malformed-request scenarios for every endpoint.
+---
+
 # Cucumber API Testing and Reporting Instructions
 
 ## Objective

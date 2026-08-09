@@ -1,3 +1,8 @@
+---
+name: english-javadoc
+description: Add English JavaDoc (purpose, @param, @return, @throws) to every method declared in an interface.
+---
+
 ## Interface Method Documentation
 
 Every method declared in an interface must include JavaDoc explaining its purpose.

@@ -1,3 +1,8 @@
+---
+name: dockerization
+description: Containerize the project end to end (Dockerfile, .dockerignore, docker-compose.yml) so it builds, tests, and runs consistently in Docker.
+---
+
 # Dockerization Instructions
 
 ## Objective

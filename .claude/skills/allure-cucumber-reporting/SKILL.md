@@ -1,3 +1,8 @@
+---
+name: allure-cucumber-reporting
+description: Integrate Allure with the Cucumber API test suite, attaching real request/response HTTP evidence (masked) to every scenario.
+---
+
 # Allure + Cucumber API Reporting Instructions
 
 ## Objective

@@ -1,3 +1,8 @@
+---
+name: observability-grafana
+description: Stand up a local Docker-based observability stack (Grafana, Prometheus, Loki, Alloy) with Micrometer/Actuator metrics from the app.
+---
+
 # Grafana, Prometheus and Loki Observability Instructions
 
 ## Objective

@@ -1,3 +1,8 @@
+---
+name: lombok-mapstruct
+description: Wire Lombok and MapStruct consistently across entities/DTOs to remove boilerplate and keep entity<->DTO mapping explicit.
+---
+
 # Lombok and MapStruct Instructions
 
 ## Objective
