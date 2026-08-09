@@ -30,7 +30,8 @@ not just this one — and each can also be invoked on its own (e.g. `/crud`,
 `crud`, `pagination-filtering`, `english-javadoc`, `cucumber-api-testing`,
 `swagger-openapi`, `service-testing`, `lombok-mapstruct`, `api-first`,
 `dockerization`, `hikari-tuning`, `observability-grafana`,
-`request-logging-dashboard`, `allure-cucumber-reporting`.
+`request-logging-dashboard`, `allure-cucumber-reporting`,
+`explicit-bean-wiring`.
 
 Invoke each by name (via the Skill mechanism, not by manually reading a file
 path) so it resolves correctly whether a project-local copy under
@@ -138,6 +139,19 @@ verified) before starting the next — don't silently batch multiple phases.
     method/url/headers/body) with sensitive header/field masking, on every
     step. Verify: `mvn verify` then `mvn allure:report`, and confirm
     `target/allure-results/*.json` actually contains attached HTTP evidence.
+13. **Explicit bean wiring** — replace `@Service`/`@Component` on the
+    service impl, mapper, and filter with a central `BeanConfig`
+    `@Configuration` class of `@Bean` methods; `@RestController` and
+    `@RestControllerAdvice` stay on their classes (Spring MVC requires them
+    for handler/advice detection) but get excluded from component scanning
+    and instantiated by `BeanConfig` too; the Spring Data JPA repository is
+    the one thing left alone, since it's a reflection-generated proxy, not a
+    plain class. Watch for the `@DataJpaTest`-breaks-on-`MeterRegistry`
+    pitfall this causes — fix with `@Lazy` on both the bean definition *and*
+    the injection point that consumes it (one alone isn't enough). Verify:
+    `mvn clean verify` (a slice test failing on an unrelated bean is this
+    pitfall, not a new bug) and exercise a real endpoint, a real 404, and
+    the access-log filter against the live app.
 
 ## End of run
 

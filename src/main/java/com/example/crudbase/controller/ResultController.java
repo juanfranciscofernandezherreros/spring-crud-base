@@ -31,6 +31,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * {@code @RestController} stays on the class because Spring MVC's handler
+ * mapping requires it (or {@code @RequestMapping}) to recognize a bean as a
+ * request handler, regardless of how the bean was instantiated. The bean
+ * itself is registered explicitly in {@link com.example.crudbase.config.BeanConfig}
+ * rather than discovered via component scanning — see
+ * {@link com.example.crudbase.CrudBaseApplication} for the scan exclusion
+ * that prevents Spring from also auto-registering a second instance.
+ */
 @RestController
 @RequestMapping("/api/results")
 @Tag(name = "Results", description = "Operations for managing match results")

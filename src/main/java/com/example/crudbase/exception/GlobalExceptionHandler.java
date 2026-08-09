@@ -11,6 +11,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.stream.Collectors;
 
+/**
+ * {@code @RestControllerAdvice} stays on the class because Spring MVC needs it
+ * to recognize this as global exception-handling advice, regardless of how
+ * the bean was instantiated. The bean itself is registered explicitly in
+ * {@link com.example.crudbase.config.BeanConfig}; see
+ * {@link com.example.crudbase.CrudBaseApplication} for the scan exclusion
+ * that prevents a duplicate auto-registered instance.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
