@@ -64,6 +64,24 @@ Reports:
 - Cucumber HTML report: `target/cucumber-reports/cucumber.html`
 - Cucumber JSON/XML reports: `target/cucumber-reports/cucumber.json`, `target/cucumber-reports/cucumber.xml`
 
+### Allure
+
+Every Cucumber scenario attaches its actual HTTP request and response (method, URL, headers, body —
+sensitive headers/fields masked) to Allure, for both passed and failed scenarios. `mvn verify` (or
+`mvn test-compile failsafe:integration-test`) produces the raw results; generating the HTML report is
+a separate, explicit step:
+
+```bash
+mvn verify              # runs Cucumber, writes target/allure-results/
+mvn allure:report       # renders target/allure-report/index.html from those results
+```
+
+Open `target/allure-report/index.html` directly in a browser. The first `allure:report` run downloads
+a local Allure CLI + Node.js into `.allure/` at the project root (gitignored, ~180 MB) — subsequent
+runs reuse it.
+
+Allure does not replace the Cucumber HTML report; both are generated from the same test run.
+
 ## Docker
 
 Prerequisites: Docker and Docker Compose.
