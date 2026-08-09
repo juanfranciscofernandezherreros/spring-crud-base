@@ -155,8 +155,8 @@ Add custom metrics only when they provide operational value.
 Examples:
 
 ```text
-results.created
-results.deleted
+results.creations
+results.deletions
 results.processing.duration
 external.api.failures
 ```
@@ -167,6 +167,18 @@ Use Micrometer:
 - `Timer`
 - `Gauge`
 - `DistributionSummary`
+
+**Naming pitfall (confirmed, not hypothetical):** never name a counter so
+that the dot-to-underscore-converted name ends in `_created` — e.g.
+`results.created` becomes `results_created`, and Prometheus/OpenMetrics
+reserves the `_created` suffix for its own creation-timestamp series. The
+Prometheus registry silently drops the meaningful part and exposes the
+counter as the ambiguous bare `results_total` instead of
+`results_created_total`, indistinguishable from "total results". Use a verb
+form that doesn't collide, e.g. `results.creations` → `results_creations_total`.
+After adding any counter, always check its actual exposed name with
+`curl .../actuator/prometheus | grep <name>` before wiring a dashboard panel
+to it — don't assume the Java name survives unchanged.
 
 Do not create high-cardinality tags.
 
@@ -344,15 +356,31 @@ The dashboard should include, where available:
 
 - Requests per second.
 - HTTP response status distribution.
-- Request latency.
-- JVM heap usage.
-- JVM non-heap usage.
-- CPU usage.
-- Live thread count.
-- GC activity.
-- Application uptime.
-- Database connection pool usage.
+- Request latency (p95).
 - Error rate.
+- **Most requested endpoints, ranked** — a table panel using
+  `topk(10, sum by (method, uri) (increase(http_server_requests_seconds_count{application="..."}[$__range])))`,
+  format `table`, `instant: true`; sort the table panel by the value column
+  descending. This answers "what's actually hammering the API" at a glance,
+  which a plain requests/s timeseries doesn't.
+- Business metric rate(s) and running totals, if custom counters exist (see
+  §7) — e.g. creations/deletions rate plus a "net" stat panel.
+- JVM heap usage, JVM non-heap usage, CPU usage, live thread count, GC
+  activity, application uptime.
+- Database connection pool usage: active/idle/pending as a timeseries, plus
+  a **utilization gauge** (`sum(hikaricp_connections_active{...}) /
+  sum(hikaricp_connections_max{...})`, unit `percentunit`, thresholds around
+  0.7/0.9) — a raw active-connection count means nothing without the
+  configured max next to it.
+- A browsable HTTP access log panel (`type: logs`, Loki datasource) if the
+  `request-logging-dashboard` skill's access-log filter is present — see
+  that skill for the log line format and exact panel query.
+
+**Organize panels into rows** (Grafana `type: "row"` panels, `collapsed:
+false`, used as section dividers) once the dashboard exceeds ~6 panels —
+e.g. "Traffic & errors", "Business metrics", "JVM & runtime", "Database
+connection pool", "Logs". An unstructured wall of panels stops being
+readable well before 15 of them.
 
 Do not create decorative panels that provide no operational value.
 
@@ -515,6 +543,12 @@ After starting the stack, verify:
 8. Application logs appear in Loki.
 9. Provisioned dashboard loads.
 10. No secrets appear in logs.
+11. Every panel's own query — run through Grafana's datasource proxy
+    (`/api/datasources/proxy/uid/<uid>/api/v1/query...`), not just raw
+    Prometheus/Loki — returns a non-empty result. A query that works
+    against Prometheus directly can still fail inside the dashboard if the
+    datasource `uid` or a template variable like `$__range` doesn't resolve
+    the way the panel assumes.
 
 ---
 

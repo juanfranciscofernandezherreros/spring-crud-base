@@ -22,23 +22,24 @@ Parse `$ARGUMENTS` (or the user's message) for:
 
 ## Source of truth
 
-Each phase below has its own standalone skill under `.claude/skills/`, and
-each can also be invoked individually (e.g. `/crud`, `/swagger-openapi`) when
-you only want one phase applied on its own:
+Each phase below has its own standalone skill, installed **globally**
+(`~/.claude/skills/<name>/SKILL.md`) so it is available in every project,
+not just this one — and each can also be invoked on its own (e.g. `/crud`,
+`/pagination-filtering`) when you only want one phase applied in isolation:
 
-`.claude/skills/crud/SKILL.md`, `.claude/skills/english-javadoc/SKILL.md`,
-`.claude/skills/cucumber-api-testing/SKILL.md`,
-`.claude/skills/swagger-openapi/SKILL.md`,
-`.claude/skills/service-testing/SKILL.md`,
-`.claude/skills/lombok-mapstruct/SKILL.md`,
-`.claude/skills/api-first/SKILL.md`, `.claude/skills/dockerization/SKILL.md`,
-`.claude/skills/observability-grafana/SKILL.md`,
-`.claude/skills/allure-cucumber-reporting/SKILL.md`.
+`crud`, `pagination-filtering`, `english-javadoc`, `cucumber-api-testing`,
+`swagger-openapi`, `service-testing`, `lombok-mapstruct`, `api-first`,
+`dockerization`, `hikari-tuning`, `observability-grafana`,
+`request-logging-dashboard`, `allure-cucumber-reporting`.
 
-If present, **read and follow them exactly** — they are more detailed than
-this skill and take precedence. If one is missing (e.g. bootstrapping a
-brand-new microservice from scratch, where `.claude/skills/` hasn't been
-copied over yet), fall back to the embedded checklist below for that phase.
+Invoke each by name (via the Skill mechanism, not by manually reading a file
+path) so it resolves correctly whether a project-local copy under
+`.claude/skills/` overrides it or not — **a project-local copy, if one
+exists, takes precedence over the global one** and should be read and
+followed exactly, since it may carry project-specific refinements. Only if
+a phase skill is entirely unavailable (neither project-local nor global —
+shouldn't happen once these are installed globally) fall back to the
+embedded checklist below for that phase.
 
 ## Ground rules
 
@@ -70,48 +71,69 @@ verified) before starting the next — don't silently batch multiple phases.
    controller (`/api/<entities>`, standard 5 REST verbs), a
    `@RestControllerAdvice` for 404/400 error shapes. Verify: `mvn spring-boot:run`
    and exercise each endpoint with curl.
-2. **English JavaDoc** — every public interface method gets an English
+2. **Pagination & filtering** — the listing endpoint from phase 1 becomes
+   paginated (`Pageable`) and filterable by every entity field via a dynamic
+   `Specification` (exact match for id/numeric/date, case-insensitive
+   partial match for strings), returning `PagedModel<ResponseDTO>` (`content`
+   + `page` envelope), not a bare array. Verify: curl the endpoint with
+   combined filter + `page`/`size` params and read the real JSON back.
+3. **English JavaDoc** — every public interface method gets an English
    JavaDoc comment describing contract, params, return, exceptions.
-3. **Cucumber API tests — 80% coverage, not 100%.** Classic JUnit4
+4. **Cucumber API tests — 80% coverage, not 100%.** Classic JUnit4
    `@RunWith(Cucumber.class)` runner (`cucumber-junit`), forced onto the
    `surefire-junit4` provider via Failsafe, bound to `integration-test`/`verify`.
    Do not use the JUnit5 `@Suite`/`cucumber-junit-platform-engine` approach —
    it has been found to silently report 0 failures on a real Cucumber failure
    with this Surefire setup. Cover the golden paths and the obvious negative
-   cases; skip exhaustive edge cases (that's the service-test phase's job).
-   Verify: `mvn verify` and confirm the reports mention Cucumber scenarios.
-4. **Swagger / OpenAPI** — `springdoc-openapi-starter-webmvc-ui:2.8.9`
+   cases, including a couple of filter/pagination scenarios; skip exhaustive
+   edge cases (that's the service-test phase's job). Verify: `mvn verify` and
+   confirm the reports mention Cucumber scenarios.
+5. **Swagger / OpenAPI** — `springdoc-openapi-starter-webmvc-ui:2.8.9`
    specifically (2.9.0 breaks with Spring Framework 6.2's `PathPatternParser`
    — do not use it). `@Tag`/`@Operation(operationId=...)`/`@ApiResponses`/
-   `@Parameter` on every endpoint, an `OpenApiConfig` bean for title/version/
-   contact. Verify: hit `/swagger-ui/index.html` and `/v3/api-docs` live.
-5. **Service unit tests — 100% of paths.** JUnit 5 + Mockito + AssertJ,
+   `@Parameter` on every endpoint, `@ParameterObject` on the filter DTO and
+   `Pageable`, an `OpenApiConfig` bean for title/version/contact. Verify: hit
+   `/swagger-ui/index.html` and `/v3/api-docs` live.
+6. **Service unit tests — 100% of paths.** JUnit 5 + Mockito + AssertJ,
    every branch (happy path, not-found, validation failure) for every service
-   method. If the service depends on `MeterRegistry`, construct it manually
-   with a real `SimpleMeterRegistry` instead of mocking it. Verify: `mvn test`
-   with a coverage tool or manual branch inventory.
-6. **Lombok + MapStruct** — `@Getter @Setter @NoArgsConstructor
+   method, plus a dedicated `@DataJpaTest` against real H2 for the
+   Specification-building logic (a mocked repository can't catch a wrong
+   `criteriaBuilder` call). If the service depends on `MeterRegistry`,
+   construct it manually with a real `SimpleMeterRegistry` instead of mocking
+   it. Verify: `mvn test` with a coverage tool or manual branch inventory.
+7. **Lombok + MapStruct** — `@Getter @Setter @NoArgsConstructor
    @AllArgsConstructor @Builder` on entity/DTOs, MapStruct
    (`componentModel="spring"`) interface for entity↔DTO with an
    `@MappingTarget` update method. Annotation processor order in
    `maven-compiler-plugin` matters: Lombok → mapstruct-processor →
    `lombok-mapstruct-binding`. Verify: `mvn clean compile` and inspect the
    generated `*MapperImpl`.
-7. **API-First** — export `docs/openapi.json`/`.yaml` from the running app
+8. **API-First** — export `docs/openapi.json`/`.yaml` from the running app
    (`GET /v3/api-docs[.yaml]`) as the committed contract; note in the README
    that contract, controller, DTOs, and Cucumber scenarios must move together.
-8. **Dockerization** — multi-stage Dockerfile (`maven:3.9-eclipse-temurin-17`
+9. **Dockerization** — multi-stage Dockerfile (`maven:3.9-eclipse-temurin-17`
    build → `eclipse-temurin:17-jre` run), non-root user, `HEALTHCHECK` on
    `/actuator/health`, `.dockerignore`, `.env.example`, `docker-compose.yml`.
    Verify: `docker compose build && docker compose up -d` then curl the health
    endpoint through the container.
-9. **Observability** — Actuator + Micrometer + `micrometer-registry-prometheus`,
-   custom business counters where meaningful, plus Prometheus + Loki + Grafana
-   Alloy + Grafana wired into the same compose network with provisioned
-   datasources and a real dashboard (not a placeholder). Verify: query
-   Prometheus/Grafana's HTTP APIs live and confirm panels return data, not
-   just that containers are "Up".
-10. **Allure reporting** — `allure-cucumber7-jvm` plugin wired into the
+10. **Hikari tuning** — explicit `spring.datasource.hikari.*` (pool name,
+    size, timeouts, leak detection) instead of Spring Boot's implicit
+    defaults, plus a test proving 3x the pool's max size worth of concurrent
+    callers are all served without connection errors. Verify: run the test
+    and read the pool name in the startup log.
+11. **Observability** — Actuator + Micrometer + `micrometer-registry-prometheus`,
+    custom business counters where meaningful (watch for the `_created`
+    Prometheus/OpenMetrics reserved-suffix pitfall — never name a counter
+    ending in `.created`), a structured HTTP access-log line per request
+    (see `request-logging-dashboard`), plus Prometheus + Loki + Grafana
+    Alloy + Grafana wired into the same compose network with provisioned
+    datasources and a real dashboard organized into rows (traffic/errors,
+    business metrics, JVM/runtime, connection pool with a utilization gauge,
+    logs) — not a placeholder or an unstructured wall of panels. Verify:
+    query Prometheus/Grafana's HTTP APIs live (through Grafana's own
+    datasource proxy, not just raw Prometheus/Loki) and confirm every panel
+    returns data, not just that containers are "Up".
+12. **Allure reporting** — `allure-cucumber7-jvm` plugin wired into the
     Cucumber runner, an HTTP-evidence attachment helper (request/response,
     method/url/headers/body) with sensitive header/field masking, on every
     step. Verify: `mvn verify` then `mvn allure:report`, and confirm
