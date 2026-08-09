@@ -183,6 +183,20 @@
           "datasource": { "type": "prometheus", "uid": "prometheus" }
         }
       ]
+    },
+    {
+      "id": 12,
+      "title": "HTTP access log (all requests)",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 46, "w": 24, "h": 12 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
+      "targets": [
+        {
+          "expr": "{container=\"crud-base-app\"} |= \"\\\"type\\\":\\\"http-access\\\"\"",
+          "datasource": { "type": "loki", "uid": "loki" }
+        }
+      ]
     }
   ]
 }
