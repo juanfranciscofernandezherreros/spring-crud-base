@@ -1,14 +1,30 @@
 package com.example.crudbase.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.time.LocalDate;
 
 public class ResultRequestDTO {
 
+    @NotBlank(message = "homeTeam must not be blank")
     private String homeTeam;
+
+    @NotBlank(message = "awayTeam must not be blank")
     private String awayTeam;
+
+    @NotNull(message = "homeScore is required")
+    @PositiveOrZero(message = "homeScore must not be negative")
     private Integer homeScore;
+
+    @NotNull(message = "awayScore is required")
+    @PositiveOrZero(message = "awayScore must not be negative")
     private Integer awayScore;
+
+    @NotNull(message = "matchDate is required")
     private LocalDate matchDate;
+
     private String competition;
     private String venue;
 

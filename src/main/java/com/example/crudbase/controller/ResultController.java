@@ -3,6 +3,7 @@ package com.example.crudbase.controller;
 import com.example.crudbase.dto.ResultRequestDTO;
 import com.example.crudbase.dto.ResultResponseDTO;
 import com.example.crudbase.service.ResultService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,13 +38,13 @@ public class ResultController {
     }
 
     @PostMapping
-    public ResponseEntity<ResultResponseDTO> create(@RequestBody ResultRequestDTO dto) {
+    public ResponseEntity<ResultResponseDTO> create(@Valid @RequestBody ResultRequestDTO dto) {
         ResultResponseDTO created = resultService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ResultResponseDTO> update(@PathVariable Long id, @RequestBody ResultRequestDTO dto) {
+    public ResponseEntity<ResultResponseDTO> update(@PathVariable Long id, @Valid @RequestBody ResultRequestDTO dto) {
         return ResponseEntity.ok(resultService.update(id, dto));
     }
 
