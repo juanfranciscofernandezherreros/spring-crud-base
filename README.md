@@ -147,10 +147,16 @@ Grafana, Prometheus and Loki are part of the same `docker compose up -d` stack d
 - Prometheus: http://localhost:9090
 - Application metrics endpoint: http://localhost:8080/actuator/prometheus
 
-**Dashboard**: "Spring Boot Overview" (folder "Spring Boot") — requests/s, HTTP status distribution,
-p95 latency, error rate, JVM heap/non-heap, CPU, live threads, GC pause time, Hikari connection pool,
-application uptime, a browsable HTTP access log (every request, via Loki), and a ranked table of the
-most requested endpoints over the selected time range (via Prometheus `topk`).
+**Dashboard**: "Spring Boot Overview" (folder "Spring Boot"), organized into five rows:
+
+- **Traffic & errors**: requests/s, HTTP status distribution, p95 latency, 5xx error rate, and a
+  ranked table of the most requested endpoints (Prometheus `topk`).
+- **Business metrics (Results)**: creation/deletion rate, total creations/deletions since app start,
+  net results, and application uptime.
+- **JVM & runtime**: heap/non-heap usage, CPU, live thread count, GC pause time.
+- **Database connection pool (Hikari)**: active/idle/pending connections, plus a utilization gauge
+  (active ÷ configured max pool size).
+- **Logs**: a browsable HTTP access log of every request, via Loki.
 
 Useful PromQL:
 

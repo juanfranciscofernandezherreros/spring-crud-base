@@ -41,7 +41,7 @@ public class ResultServiceImpl implements ResultService {
     public ResultResponseDTO create(ResultRequestDTO dto) {
         Result result = resultMapper.toEntity(dto);
         Result saved = resultRepository.save(result);
-        meterRegistry.counter("results.created").increment();
+        meterRegistry.counter("results.creations").increment();
         return resultMapper.toResponseDTO(saved);
     }
 

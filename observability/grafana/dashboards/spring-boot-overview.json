@@ -2,17 +2,18 @@
   "title": "Spring Boot Overview",
   "uid": "spring-boot-overview",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "editable": true,
   "refresh": "10s",
   "time": { "from": "now-1h", "to": "now" },
   "tags": ["spring-boot", "crud-base"],
   "panels": [
+    { "id": 1, "title": "Traffic & errors", "type": "row", "collapsed": false, "panels": [], "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 } },
     {
-      "id": 1,
+      "id": 2,
       "title": "Requests per second",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 1, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -23,10 +24,10 @@
       ]
     },
     {
-      "id": 2,
+      "id": 3,
       "title": "HTTP response status distribution",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 1, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -37,10 +38,10 @@
       ]
     },
     {
-      "id": 3,
+      "id": 4,
       "title": "Request latency (p95)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
       "targets": [
@@ -52,10 +53,10 @@
       ]
     },
     {
-      "id": 4,
+      "id": 5,
       "title": "Error rate (5xx)",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 9, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
       "targets": [
@@ -67,143 +68,11 @@
       ]
     },
     {
-      "id": 5,
-      "title": "JVM heap usage",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
-      "targets": [
-        {
-          "expr": "sum(jvm_memory_used_bytes{application=\"crud-base\", area=\"heap\"})",
-          "legendFormat": "used",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        },
-        {
-          "expr": "sum(jvm_memory_max_bytes{application=\"crud-base\", area=\"heap\"})",
-          "legendFormat": "max",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
       "id": 6,
-      "title": "JVM non-heap usage",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
-      "targets": [
-        {
-          "expr": "sum(jvm_memory_used_bytes{application=\"crud-base\", area=\"nonheap\"})",
-          "legendFormat": "used",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "title": "CPU usage",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
-      "targets": [
-        {
-          "expr": "process_cpu_usage{application=\"crud-base\"}",
-          "legendFormat": "process CPU",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        },
-        {
-          "expr": "system_cpu_usage{application=\"crud-base\"}",
-          "legendFormat": "system CPU",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "title": "Live thread count",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "jvm_threads_live_threads{application=\"crud-base\"}",
-          "legendFormat": "live threads",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "title": "GC pause time",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "targets": [
-        {
-          "expr": "rate(jvm_gc_pause_seconds_sum{application=\"crud-base\"}[5m])",
-          "legendFormat": "GC pause/s",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "title": "Database connection pool (Hikari)",
-      "type": "timeseries",
-      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "hikaricp_connections_active{application=\"crud-base\"}",
-          "legendFormat": "active",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        },
-        {
-          "expr": "hikaricp_connections_pending{application=\"crud-base\"}",
-          "legendFormat": "pending",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 11,
-      "title": "Application uptime",
-      "type": "stat",
-      "gridPos": { "x": 0, "y": 40, "w": 6, "h": 6 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
-      "targets": [
-        {
-          "expr": "process_uptime_seconds{application=\"crud-base\"}",
-          "legendFormat": "uptime",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
-        }
-      ]
-    },
-    {
-      "id": 12,
-      "title": "HTTP access log (all requests)",
-      "type": "logs",
-      "gridPos": { "x": 0, "y": 46, "w": 24, "h": 12 },
-      "datasource": { "type": "loki", "uid": "loki" },
-      "options": { "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
-      "targets": [
-        {
-          "expr": "{container=\"crud-base-app\"} |= \"\\\"type\\\":\\\"http-access\\\"\"",
-          "datasource": { "type": "loki", "uid": "loki" }
-        }
-      ]
-    },
-    {
-      "id": 13,
       "title": "Most requested endpoints (top 10)",
       "type": "table",
       "description": "Endpoints ranked by total request count over the selected time range.",
-      "gridPos": { "x": 0, "y": 58, "w": 24, "h": 10 },
+      "gridPos": { "x": 0, "y": 17, "w": 24, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "targets": [
         {
@@ -223,15 +92,192 @@
           }
         }
       ],
-      "options": {
-        "sortBy": [{ "displayName": "Requests", "desc": true }]
-      },
+      "options": { "sortBy": [{ "displayName": "Requests", "desc": true }] },
       "fieldConfig": {
         "defaults": { "custom": { "align": "left" } },
         "overrides": [
           { "matcher": { "id": "byName", "options": "Requests" }, "properties": [{ "id": "custom.align", "value": "right" }] }
         ]
       }
+    },
+
+    { "id": 7, "title": "Business metrics (Results)", "type": "row", "collapsed": false, "panels": [], "gridPos": { "x": 0, "y": 25, "w": 24, "h": 1 } },
+    {
+      "id": 8,
+      "title": "Result creations rate",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 26, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(rate(results_creations_total{application=\"crud-base\"}[5m]))",
+          "legendFormat": "creations/s",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Result deletions rate",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 26, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(rate(results_deleted_total{application=\"crud-base\"}[5m]))",
+          "legendFormat": "deletions/s",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Total creations (since start)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 34, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(results_creations_total{application=\"crud-base\"})", "legendFormat": "created", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Total deletions (since start)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 34, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(results_deleted_total{application=\"crud-base\"})", "legendFormat": "deleted", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Net results (created - deleted)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 34, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(results_creations_total{application=\"crud-base\"}) - sum(results_deleted_total{application=\"crud-base\"})", "legendFormat": "net", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Application uptime",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 34, "w": 6, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "expr": "process_uptime_seconds{application=\"crud-base\"}", "legendFormat": "uptime", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+
+    { "id": 14, "title": "JVM & runtime", "type": "row", "collapsed": false, "panels": [], "gridPos": { "x": 0, "y": 40, "w": 24, "h": 1 } },
+    {
+      "id": 15,
+      "title": "JVM heap usage",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 41, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{application=\"crud-base\", area=\"heap\"})", "legendFormat": "used", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "expr": "sum(jvm_memory_max_bytes{application=\"crud-base\", area=\"heap\"})", "legendFormat": "max", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "JVM non-heap usage",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 41, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{application=\"crud-base\", area=\"nonheap\"})", "legendFormat": "used", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "CPU usage",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 }, "overrides": [] },
+      "targets": [
+        { "expr": "process_cpu_usage{application=\"crud-base\"}", "legendFormat": "process CPU", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "expr": "system_cpu_usage{application=\"crud-base\"}", "legendFormat": "system CPU", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Live thread count",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "jvm_threads_live_threads{application=\"crud-base\"}", "legendFormat": "live threads", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "GC pause time",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 57, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "expr": "rate(jvm_gc_pause_seconds_sum{application=\"crud-base\"}[5m])", "legendFormat": "GC pause/s", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+
+    { "id": 20, "title": "Database connection pool (Hikari)", "type": "row", "collapsed": false, "panels": [], "gridPos": { "x": 0, "y": 65, "w": 24, "h": 1 } },
+    {
+      "id": 21,
+      "title": "Hikari connections (active / idle / pending)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 66, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "hikaricp_connections_active{application=\"crud-base\"}", "legendFormat": "active", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "expr": "hikaricp_connections_idle{application=\"crud-base\"}", "legendFormat": "idle", "datasource": { "type": "prometheus", "uid": "prometheus" } },
+        { "expr": "hikaricp_connections_pending{application=\"crud-base\"}", "legendFormat": "pending (waiting)", "datasource": { "type": "prometheus", "uid": "prometheus" } }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Hikari pool utilization",
+      "type": "gauge",
+      "description": "Active connections as a share of the configured maximum pool size.",
+      "gridPos": { "x": 12, "y": 66, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0, "thresholds": { "mode": "absolute", "steps": [
+        { "color": "green", "value": null },
+        { "color": "yellow", "value": 0.7 },
+        { "color": "red", "value": 0.9 }
+      ] } }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(hikaricp_connections_active{application=\"crud-base\"}) / sum(hikaricp_connections_max{application=\"crud-base\"})",
+          "legendFormat": "utilization",
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ]
+    },
+
+    { "id": 23, "title": "Logs", "type": "row", "collapsed": false, "panels": [], "gridPos": { "x": 0, "y": 74, "w": 24, "h": 1 } },
+    {
+      "id": 24,
+      "title": "HTTP access log (all requests)",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 75, "w": 24, "h": 12 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true },
+      "targets": [
+        {
+          "expr": "{container=\"crud-base-app\"} |= \"\\\"type\\\":\\\"http-access\\\"\"",
+          "datasource": { "type": "loki", "uid": "loki" }
+        }
+      ]
     }
   ]
 }

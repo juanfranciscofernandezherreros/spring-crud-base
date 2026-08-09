@@ -191,7 +191,7 @@ class ResultServiceImplTest {
         ResultResponseDTO result = resultService.create(requestDto);
 
         assertThat(result).isEqualTo(responseDto);
-        assertThat(meterRegistry.counter("results.created").count()).isEqualTo(1.0);
+        assertThat(meterRegistry.counter("results.creations").count()).isEqualTo(1.0);
         verify(resultMapper).toEntity(requestDto);
         verify(resultRepository).save(entityToSave);
         verify(resultMapper).toResponseDTO(savedEntity);
