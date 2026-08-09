@@ -1,12 +1,18 @@
 package com.example.crudbase.config;
 
+import com.example.crudbase.controller.ClienteController;
 import com.example.crudbase.controller.ResultController;
 import com.example.crudbase.exception.GlobalExceptionHandler;
 import com.example.crudbase.logging.RequestLoggingFilter;
+import com.example.crudbase.mapper.ClienteMapper;
+import com.example.crudbase.mapper.ClienteMapperImpl;
 import com.example.crudbase.mapper.ResultMapper;
 import com.example.crudbase.mapper.ResultMapperImpl;
+import com.example.crudbase.repository.ClienteRepository;
 import com.example.crudbase.repository.ResultRepository;
+import com.example.crudbase.service.ClienteService;
 import com.example.crudbase.service.ResultService;
+import com.example.crudbase.service.impl.ClienteServiceImpl;
 import com.example.crudbase.service.impl.ResultServiceImpl;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
@@ -22,11 +28,12 @@ import org.springframework.context.annotation.Lazy;
  * {@link com.example.crudbase.CrudBaseApplication}) so this is the only place that
  * instantiates them.
  *
- * <p>{@link ResultRepository} is deliberately not redefined here: Spring Data JPA
- * repository interfaces are backed by a proxy generated via reflection
- * ({@code JpaRepositoryFactoryBean}), not a plain class you can {@code new} up, so
- * manually {@code @Bean}-defining it would fight the framework for no benefit. It stays
- * auto-configured by {@code spring-boot-starter-data-jpa}.
+ * <p>{@link ResultRepository} and {@link ClienteRepository} are deliberately not
+ * redefined here: Spring Data JPA repository interfaces are backed by a proxy
+ * generated via reflection ({@code JpaRepositoryFactoryBean}), not a plain class you
+ * can {@code new} up, so manually {@code @Bean}-defining them would fight the
+ * framework for no benefit. They stay auto-configured by
+ * {@code spring-boot-starter-data-jpa}.
  */
 @Configuration
 public class BeanConfig {
@@ -34,6 +41,11 @@ public class BeanConfig {
     @Bean
     public ResultMapper resultMapper() {
         return new ResultMapperImpl();
+    }
+
+    @Bean
+    public ClienteMapper clienteMapper() {
+        return new ClienteMapperImpl();
     }
 
     /**
@@ -64,6 +76,27 @@ public class BeanConfig {
     @Bean
     public ResultController resultController(@Lazy ResultService resultService) {
         return new ResultController(resultService);
+    }
+
+    /**
+     * {@code @Lazy}: same reasoning as {@link #resultService}, mirrored for the
+     * Cliente stack — this bean also depends on {@link MeterRegistry}, which is only
+     * present once Actuator/Micrometer autoconfiguration runs.
+     */
+    @Bean
+    @Lazy
+    public ClienteService clienteService(ClienteRepository clienteRepository, ClienteMapper clienteMapper, MeterRegistry meterRegistry) {
+        return new ClienteServiceImpl(clienteRepository, clienteMapper, meterRegistry);
+    }
+
+    /**
+     * {@code @Lazy} on the parameter mirrors {@link #resultController}'s reasoning:
+     * without it, eagerly creating {@code clienteController} would force
+     * {@code clienteService} to resolve immediately, defeating its own laziness.
+     */
+    @Bean
+    public ClienteController clienteController(@Lazy ClienteService clienteService) {
+        return new ClienteController(clienteService);
     }
 
     @Bean
