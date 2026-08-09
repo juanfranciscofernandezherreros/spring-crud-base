@@ -1,0 +1,40 @@
+// Discovers running Docker containers on the host and forwards their
+// stdout/stderr logs to Loki, labeled by container/service/environment.
+
+discovery.docker "containers" {
+	host = "unix:///var/run/docker.sock"
+}
+
+loki.relabel "docker_logs" {
+	forward_to = []
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "^/(.*)$"
+		target_label  = "container"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "^/(.*)$"
+		target_label  = "service"
+	}
+
+	rule {
+		replacement  = "local"
+		target_label = "environment"
+	}
+}
+
+loki.source.docker "default" {
+	host          = "unix:///var/run/docker.sock"
+	targets       = discovery.docker.containers.targets
+	forward_to    = [loki.write.default.receiver]
+	relabel_rules = loki.relabel.docker_logs.rules
+}
+
+loki.write "default" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

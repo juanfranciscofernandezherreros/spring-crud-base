@@ -6,7 +6,8 @@
 mvn spring-boot:run
 ```
 
-The application starts on `http://localhost:8080`.
+The application starts on `http://localhost:8080`. See [Docker](#docker) to run it (and the
+observability stack) in containers instead.
 
 ## API Documentation
 
@@ -62,3 +63,76 @@ Reports:
 - Cucumber acceptance tests (Failsafe): `target/failsafe-reports/`
 - Cucumber HTML report: `target/cucumber-reports/cucumber.html`
 - Cucumber JSON/XML reports: `target/cucumber-reports/cucumber.json`, `target/cucumber-reports/cucumber.xml`
+
+## Docker
+
+Prerequisites: Docker and Docker Compose.
+
+```bash
+cp .env.example .env      # first time only; edit values if needed
+docker compose build
+docker compose up -d
+docker compose ps
+docker compose logs -f app
+docker compose down       # stop the stack, keep volumes
+docker compose down -v    # stop the stack AND delete volume data (Prometheus/Loki/Grafana history)
+```
+
+This starts the application plus the full observability stack (Prometheus, Loki, Grafana Alloy,
+Grafana) on a shared `crud-net` Docker network. Environment variables (see `.env.example`) control
+host ports and Grafana's admin credentials; no secrets are committed to the repository.
+
+The app image is a two-stage build (`maven:3.9-eclipse-temurin-17` to compile, `eclipse-temurin:17-jre`
+to run), runs as a non-root user, and its `HEALTHCHECK` polls `/actuator/health`.
+
+| Service    | URL                              | Notes                                   |
+|------------|-----------------------------------|------------------------------------------|
+| App        | http://localhost:8080             | Swagger UI at `/swagger-ui/index.html`   |
+| Prometheus | http://localhost:9090             | Scrapes `app:8080/actuator/prometheus`   |
+| Loki       | http://localhost:3100             | Queried through Grafana, not directly    |
+| Grafana    | http://localhost:3000             | Login from `.env` (`admin` / `change-me` by default) |
+
+Health endpoint: http://localhost:8080/actuator/health
+
+The application uses an in-memory H2 database, so there is no separate database service or volume
+to manage; `SPRING_PROFILES_ACTIVE=docker` (the container default) only disables the H2 console.
+
+Tests still run the same way inside or outside Docker — `mvn clean verify` is the canonical build
+and is what CI/the image build should run before producing a releasable artifact.
+
+## Observability
+
+Grafana, Prometheus and Loki are part of the same `docker compose up -d` stack described above.
+
+- Grafana: http://localhost:3000 (datasources and the dashboard below are provisioned automatically —
+  nothing to configure by hand)
+- Prometheus: http://localhost:9090
+- Application metrics endpoint: http://localhost:8080/actuator/prometheus
+
+**Dashboard**: "Spring Boot Overview" (folder "Spring Boot") — requests/s, HTTP status distribution,
+p95 latency, error rate, JVM heap/non-heap, CPU, live threads, GC pause time, Hikari connection pool,
+and application uptime.
+
+Useful PromQL:
+
+```promql
+sum(rate(http_server_requests_seconds_count{application="crud-base"}[5m]))
+sum by (status) (rate(http_server_requests_seconds_count{application="crud-base"}[5m]))
+histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application="crud-base"}[5m])))
+```
+
+Useful LogQL (Grafana Explore, Loki datasource):
+
+```logql
+{container="crud-base-app"}
+{container="crud-base-app"} |= "ERROR"
+```
+
+Application logs go to stdout and are collected by Grafana Alloy directly from the Docker socket
+(read-only mount) and forwarded to Loki — no log files inside the app container.
+
+Resetting local observability data (Prometheus/Loki/Grafana history) requires `docker compose down -v`;
+everything else survives a normal `docker compose down`.
+
+This is a local development stack: single-node Loki with filesystem storage, no auth on Grafana beyond
+the admin password, and no alerting configured. None of that is production-ready as-is.

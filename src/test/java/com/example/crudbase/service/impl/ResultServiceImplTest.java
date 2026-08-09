@@ -6,10 +6,11 @@ import com.example.crudbase.exception.ResourceNotFoundException;
 import com.example.crudbase.mapper.ResultMapper;
 import com.example.crudbase.model.Result;
 import com.example.crudbase.repository.ResultRepository;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -45,8 +46,15 @@ class ResultServiceImplTest {
     @Mock
     private ResultMapper resultMapper;
 
-    @InjectMocks
+    private SimpleMeterRegistry meterRegistry;
+
     private ResultServiceImpl resultService;
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+        resultService = new ResultServiceImpl(resultRepository, resultMapper, meterRegistry);
+    }
 
     // ---- findAll ----
 
@@ -154,6 +162,7 @@ class ResultServiceImplTest {
         ResultResponseDTO result = resultService.create(requestDto);
 
         assertThat(result).isEqualTo(responseDto);
+        assertThat(meterRegistry.counter("results.created").count()).isEqualTo(1.0);
         verify(resultMapper).toEntity(requestDto);
         verify(resultRepository).save(entityToSave);
         verify(resultMapper).toResponseDTO(savedEntity);
@@ -263,6 +272,7 @@ class ResultServiceImplTest {
         resultService.delete(RESULT_ID);
 
         verify(resultRepository).delete(existing);
+        assertThat(meterRegistry.counter("results.deleted").count()).isEqualTo(1.0);
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.example.crudbase.mapper.ResultMapper;
 import com.example.crudbase.model.Result;
 import com.example.crudbase.repository.ResultRepository;
 import com.example.crudbase.service.ResultService;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ public class ResultServiceImpl implements ResultService {
 
     private final ResultRepository resultRepository;
     private final ResultMapper resultMapper;
+    private final MeterRegistry meterRegistry;
 
     @Override
     public List<ResultResponseDTO> findAll() {
@@ -36,6 +38,7 @@ public class ResultServiceImpl implements ResultService {
     public ResultResponseDTO create(ResultRequestDTO dto) {
         Result result = resultMapper.toEntity(dto);
         Result saved = resultRepository.save(result);
+        meterRegistry.counter("results.created").increment();
         return resultMapper.toResponseDTO(saved);
     }
 
@@ -51,6 +54,7 @@ public class ResultServiceImpl implements ResultService {
     public void delete(Long id) {
         Result existing = findResultOrThrow(id);
         resultRepository.delete(existing);
+        meterRegistry.counter("results.deleted").increment();
     }
 
     private Result findResultOrThrow(Long id) {
