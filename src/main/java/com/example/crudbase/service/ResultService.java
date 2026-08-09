@@ -1,18 +1,22 @@
 package com.example.crudbase.service;
 
+import com.example.crudbase.dto.ResultFilter;
 import com.example.crudbase.dto.ResultRequestDTO;
 import com.example.crudbase.dto.ResultResponseDTO;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ResultService {
 
     /**
-     * Retrieves all available results.
+     * Retrieves a paginated page of results, optionally narrowed down by any combination
+     * of the given filters.
      *
-     * @return a list containing all results
+     * @param filter   the criteria to filter results by; fields left unset are not filtered on
+     * @param pageable the requested page number, size, and sort order
+     * @return the page of results matching the filter
      */
-    List<ResultResponseDTO> findAll();
+    Page<ResultResponseDTO> findAll(ResultFilter filter, Pageable pageable);
 
     /**
      * Retrieves a result by its unique identifier.

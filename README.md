@@ -16,6 +16,26 @@ observability stack) in containers instead.
 - OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
 - Exported OpenAPI specification: [docs/openapi.json](docs/openapi.json), [docs/openapi.yaml](docs/openapi.yaml)
 
+### Listing, filtering and pagination
+
+`GET /api/results` is paginated and filterable by every field of the entity:
+
+```
+GET /api/results?homeTeam=real&awayScore=1&page=0&size=20&sort=matchDate,desc
+```
+
+- `page`, `size`, `sort` control pagination (Spring Data `Pageable`); `size` defaults to 20, sorted by `id`.
+- `id`, `homeScore`, `awayScore`, `matchDate` match exactly; `homeTeam`, `awayTeam`, `competition`, `venue`
+  match partially and case-insensitively. All filters are optional and combine with AND.
+- The response is a page envelope, not a bare array:
+
+```json
+{
+  "content": [ { "id": 1, "homeTeam": "Real Madrid", "...": "..." } ],
+  "page": { "size": 20, "number": 0, "totalElements": 1, "totalPages": 1 }
+}
+```
+
 ## API-First
 
 `docs/openapi.yaml` (and its JSON equivalent) is the contract for the public API: every endpoint,
@@ -129,7 +149,8 @@ Grafana, Prometheus and Loki are part of the same `docker compose up -d` stack d
 
 **Dashboard**: "Spring Boot Overview" (folder "Spring Boot") — requests/s, HTTP status distribution,
 p95 latency, error rate, JVM heap/non-heap, CPU, live threads, GC pause time, Hikari connection pool,
-and application uptime.
+application uptime, a browsable HTTP access log (every request, via Loki), and a ranked table of the
+most requested endpoints over the selected time range (via Prometheus `topk`).
 
 Useful PromQL:
 

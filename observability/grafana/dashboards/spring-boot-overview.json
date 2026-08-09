@@ -197,6 +197,41 @@
           "datasource": { "type": "loki", "uid": "loki" }
         }
       ]
+    },
+    {
+      "id": 13,
+      "title": "Most requested endpoints (top 10)",
+      "type": "table",
+      "description": "Endpoints ranked by total request count over the selected time range.",
+      "gridPos": { "x": 0, "y": 58, "w": 24, "h": 10 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (method, uri) (increase(http_server_requests_seconds_count{application=\"crud-base\"}[$__range])))",
+          "format": "table",
+          "instant": true,
+          "datasource": { "type": "prometheus", "uid": "prometheus" }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true },
+            "indexByName": { "method": 0, "uri": 1, "Value": 2 },
+            "renameByName": { "method": "Method", "uri": "Endpoint", "Value": "Requests" }
+          }
+        }
+      ],
+      "options": {
+        "sortBy": [{ "displayName": "Requests", "desc": true }]
+      },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "left" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Requests" }, "properties": [{ "id": "custom.align", "value": "right" }] }
+        ]
+      }
     }
   ]
 }

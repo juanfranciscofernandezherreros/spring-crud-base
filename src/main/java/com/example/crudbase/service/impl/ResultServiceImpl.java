@@ -1,17 +1,20 @@
 package com.example.crudbase.service.impl;
 
+import com.example.crudbase.dto.ResultFilter;
 import com.example.crudbase.dto.ResultRequestDTO;
 import com.example.crudbase.dto.ResultResponseDTO;
 import com.example.crudbase.exception.ResourceNotFoundException;
 import com.example.crudbase.mapper.ResultMapper;
 import com.example.crudbase.model.Result;
 import com.example.crudbase.repository.ResultRepository;
+import com.example.crudbase.repository.ResultSpecifications;
 import com.example.crudbase.service.ResultService;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,10 +25,10 @@ public class ResultServiceImpl implements ResultService {
     private final MeterRegistry meterRegistry;
 
     @Override
-    public List<ResultResponseDTO> findAll() {
-        return resultRepository.findAll().stream()
-                .map(resultMapper::toResponseDTO)
-                .toList();
+    public Page<ResultResponseDTO> findAll(ResultFilter filter, Pageable pageable) {
+        Specification<Result> specification = ResultSpecifications.fromFilter(filter);
+        return resultRepository.findAll(specification, pageable)
+                .map(resultMapper::toResponseDTO);
     }
 
     @Override

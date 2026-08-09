@@ -112,18 +112,122 @@ paths:
     get:
       tags:
       - Results
-      summary: Get all results
-      description: Returns every match result currently stored.
+      summary: Get a paginated list of results
+      description: "Returns match results matching the given filters (all optional),\
+        \ paginated and sortable. String filters match partially and case-insensitively;\
+        \ id, score, and date filters match exactly."
       operationId: getAllResults
+      parameters:
+      - name: id
+        in: query
+        description: Exact result identifier
+        required: false
+        schema:
+          type: integer
+          format: int64
+          description: Exact result identifier
+          example: 1
+        example: 1
+      - name: homeTeam
+        in: query
+        description: "Partial, case-insensitive match on the home team name"
+        required: false
+        schema:
+          type: string
+          description: "Partial, case-insensitive match on the home team name"
+          example: Real
+        example: Real
+      - name: awayTeam
+        in: query
+        description: "Partial, case-insensitive match on the away team name"
+        required: false
+        schema:
+          type: string
+          description: "Partial, case-insensitive match on the away team name"
+          example: Barcelona
+        example: Barcelona
+      - name: homeScore
+        in: query
+        description: Exact number of goals scored by the home team
+        required: false
+        schema:
+          type: integer
+          format: int32
+          description: Exact number of goals scored by the home team
+          example: 2
+        example: 2
+      - name: awayScore
+        in: query
+        description: Exact number of goals scored by the away team
+        required: false
+        schema:
+          type: integer
+          format: int32
+          description: Exact number of goals scored by the away team
+          example: 1
+        example: 1
+      - name: matchDate
+        in: query
+        description: Exact match date
+        required: false
+        schema:
+          type: string
+          format: date
+          description: Exact match date
+          example: 2026-02-05
+        example: 2026-02-05
+      - name: competition
+        in: query
+        description: "Partial, case-insensitive match on the competition name"
+        required: false
+        schema:
+          type: string
+          description: "Partial, case-insensitive match on the competition name"
+          example: La Liga
+        example: La Liga
+      - name: venue
+        in: query
+        description: "Partial, case-insensitive match on the venue name"
+        required: false
+        schema:
+          type: string
+          description: "Partial, case-insensitive match on the venue name"
+          example: Bernabeu
+        example: Bernabeu
+      - name: page
+        in: query
+        description: Zero-based page index (0..N)
+        required: false
+        schema:
+          type: integer
+          default: 0
+          minimum: 0
+      - name: size
+        in: query
+        description: The size of the page to be returned
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+      - name: sort
+        in: query
+        description: "Sorting criteria in the format: property,(asc|desc). Default\
+          \ sort order is ascending. Multiple sort criteria are supported."
+        required: false
+        schema:
+          type: array
+          default:
+          - "id,ASC"
+          items:
+            type: string
       responses:
         "200":
           description: Results retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ResultResponseDTO"
+                $ref: "#/components/schemas/PagedModel"
     post:
       tags:
       - Results
@@ -263,3 +367,26 @@ components:
           type: string
           description: Request path that produced the error
           example: /api/results/999
+    PageMetadata:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int64
+        number:
+          type: integer
+          format: int64
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int64
+    PagedModel:
+      type: object
+      properties:
+        content:
+          type: array
+          items: {}
+        page:
+          $ref: "#/components/schemas/PageMetadata"

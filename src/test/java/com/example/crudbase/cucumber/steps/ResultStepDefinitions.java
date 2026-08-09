@@ -74,14 +74,19 @@ public class ResultStepDefinitions {
         assertThat(response.statusCode()).isEqualTo(status);
     }
 
-    @Then("the response should be an array")
-    public void theResponseShouldBeAnArray() {
-        assertThat(response.getBody().asString().trim()).startsWith("[");
+    @Then("the response should be a page of results")
+    public void theResponseShouldBeAPageOfResults() {
+        assertThat(response.jsonPath().getList("content")).as("content").isNotNull();
     }
 
     @Then("the response should contain {int} result(s)")
     public void theResponseShouldContainNResults(int count) {
-        assertThat(response.jsonPath().getList("$")).hasSize(count);
+        assertThat(response.jsonPath().getList("content")).hasSize(count);
+    }
+
+    @Then("the total number of results should be {int}")
+    public void theTotalNumberOfResultsShouldBe(int total) {
+        assertThat(response.jsonPath().getLong("page.totalElements")).isEqualTo(total);
     }
 
     @Then("the response field {string} should not be null")

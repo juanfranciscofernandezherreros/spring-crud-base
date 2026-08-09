@@ -1,5 +1,6 @@
 package com.example.crudbase.service.impl;
 
+import com.example.crudbase.dto.ResultFilter;
 import com.example.crudbase.dto.ResultRequestDTO;
 import com.example.crudbase.dto.ResultResponseDTO;
 import com.example.crudbase.exception.ResourceNotFoundException;
@@ -13,6 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,12 +27,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,57 +63,81 @@ class ResultServiceImplTest {
 
     // ---- findAll ----
 
+    @SuppressWarnings("unchecked")
+    private Page<Result> stubRepositoryPage(Pageable pageable, List<Result> entities, long total) {
+        Page<Result> page = new PageImpl<>(entities, pageable, total);
+        when(resultRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
+        return page;
+    }
+
     @Test
-    void shouldReturnEmptyListWhenNoResultsExist() {
-        when(resultRepository.findAll()).thenReturn(List.of());
+    void shouldReturnEmptyPageWhenNoResultsExist() {
+        Pageable pageable = PageRequest.of(0, 20);
+        stubRepositoryPage(pageable, List.of(), 0);
 
-        List<ResultResponseDTO> results = resultService.findAll();
+        Page<ResultResponseDTO> results = resultService.findAll(ResultFilter.builder().build(), pageable);
 
-        assertThat(results).isEmpty();
-        verify(resultRepository).findAll();
+        assertThat(results.getContent()).isEmpty();
+        assertThat(results.getTotalElements()).isZero();
         verifyNoInteractions(resultMapper);
     }
 
     @Test
-    void shouldReturnSingleResultWhenOneResultExists() {
+    void shouldReturnMappedPageWhenOneResultExists() {
+        Pageable pageable = PageRequest.of(0, 20);
         Result entity = buildEntity();
         ResultResponseDTO dto = buildResponseDto();
-        when(resultRepository.findAll()).thenReturn(List.of(entity));
+        stubRepositoryPage(pageable, List.of(entity), 1);
         when(resultMapper.toResponseDTO(entity)).thenReturn(dto);
 
-        List<ResultResponseDTO> results = resultService.findAll();
+        Page<ResultResponseDTO> results = resultService.findAll(ResultFilter.builder().build(), pageable);
 
-        assertThat(results).containsExactly(dto);
+        assertThat(results.getContent()).containsExactly(dto);
+        assertThat(results.getTotalElements()).isEqualTo(1);
         verify(resultMapper).toResponseDTO(entity);
     }
 
     @Test
-    void shouldMapAllEntitiesWhenMultipleResultsExist() {
+    void shouldMapAllEntitiesInPageWhenMultipleResultsExist() {
+        Pageable pageable = PageRequest.of(0, 20);
         Result entity1 = buildEntity();
         Result entity2 = buildEntity();
         entity2.setId(2L);
         ResultResponseDTO dto1 = buildResponseDto();
         ResultResponseDTO dto2 = new ResultResponseDTO();
         dto2.setId(2L);
-        when(resultRepository.findAll()).thenReturn(List.of(entity1, entity2));
+        stubRepositoryPage(pageable, List.of(entity1, entity2), 2);
         when(resultMapper.toResponseDTO(entity1)).thenReturn(dto1);
         when(resultMapper.toResponseDTO(entity2)).thenReturn(dto2);
 
-        List<ResultResponseDTO> results = resultService.findAll();
+        Page<ResultResponseDTO> results = resultService.findAll(ResultFilter.builder().build(), pageable);
 
-        assertThat(results).containsExactly(dto1, dto2);
-        verify(resultMapper).toResponseDTO(entity1);
-        verify(resultMapper).toResponseDTO(entity2);
+        assertThat(results.getContent()).containsExactly(dto1, dto2);
     }
 
     @Test
-    void shouldCallRepositoryExactlyOnceWhenFindingAllResults() {
-        when(resultRepository.findAll()).thenReturn(List.of());
+    void shouldReportTotalPagesFromASecondPage() {
+        Pageable pageable = PageRequest.of(1, 1);
+        Result entity = buildEntity();
+        stubRepositoryPage(pageable, List.of(entity), 2);
+        when(resultMapper.toResponseDTO(entity)).thenReturn(buildResponseDto());
 
-        resultService.findAll();
+        Page<ResultResponseDTO> results = resultService.findAll(ResultFilter.builder().build(), pageable);
 
-        verify(resultRepository, times(1)).findAll();
-        verifyNoMoreInteractions(resultRepository);
+        assertThat(results.getNumber()).isEqualTo(1);
+        assertThat(results.getTotalPages()).isEqualTo(2);
+        assertThat(results.getTotalElements()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldPassGivenFilterAndPageableToRepository() {
+        Pageable pageable = PageRequest.of(0, 5);
+        ResultFilter filter = ResultFilter.builder().homeTeam(HOME_TEAM).build();
+        stubRepositoryPage(pageable, List.of(), 0);
+
+        resultService.findAll(filter, pageable);
+
+        verify(resultRepository).findAll(any(Specification.class), eq(pageable));
     }
 
     // ---- findById ----
@@ -291,7 +320,7 @@ class ResultServiceImplTest {
         assertThatThrownBy(() -> resultService.delete(UNKNOWN_ID))
                 .isInstanceOf(ResourceNotFoundException.class);
 
-        verify(resultRepository, never()).delete(any());
+        verify(resultRepository, never()).delete(any(Result.class));
     }
 
     // ---- test data builders ----

@@ -8,7 +8,8 @@ Feature: Results API
   Scenario: Get empty results collection
     When I send a GET request to "/api/results"
     Then the response status should be 200
-    And the response should be an array
+    And the response should be a page of results
+    And the response should contain 0 results
 
   @positive
   Scenario: Get results collection with one record
@@ -24,6 +25,67 @@ Feature: Results API
     When I send a GET request to "/api/results"
     Then the response status should be 200
     And the response should contain 2 results
+
+  @positive
+  Scenario: Paginate results with a page size smaller than the total
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    And a result exists with homeTeam "Talleres", awayTeam "Belgrano", homeScore 3, awayScore 0, matchDate "2026-01-12"
+    When I send a GET request to "/api/results?page=0&size=2"
+    Then the response status should be 200
+    And the response should contain 2 results
+    And the total number of results should be 3
+
+  @positive
+  Scenario: Filter results by home team, partial and case-insensitive
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    When I send a GET request to "/api/results?homeTeam=river"
+    Then the response status should be 200
+    And the response should contain 1 result
+    And the response field "content[0].homeTeam" should be "River Plate"
+
+  @positive
+  Scenario: Filter results by away team, partial and case-insensitive
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    When I send a GET request to "/api/results?awayTeam=indepen"
+    Then the response status should be 200
+    And the response should contain 1 result
+    And the response field "content[0].awayTeam" should be "Independiente"
+
+  @positive
+  Scenario: Filter results by exact home score
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    When I send a GET request to "/api/results?homeScore=0"
+    Then the response status should be 200
+    And the response should contain 1 result
+    And the response field "content[0].homeTeam" should be "Racing"
+
+  @positive
+  Scenario: Filter results by exact match date
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    When I send a GET request to "/api/results?matchDate=2026-01-11"
+    Then the response status should be 200
+    And the response should contain 1 result
+    And the response field "content[0].homeTeam" should be "Racing"
+
+  @positive
+  Scenario: Filter results by multiple fields combined
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    And a result exists with homeTeam "Racing", awayTeam "Independiente", homeScore 0, awayScore 0, matchDate "2026-01-11"
+    When I send a GET request to "/api/results?homeTeam=River&awayScore=1"
+    Then the response status should be 200
+    And the response should contain 1 result
+
+  @negative
+  Scenario: Filter results with a value matching nothing
+    Given a result exists with homeTeam "River Plate", awayTeam "Boca Juniors", homeScore 2, awayScore 1, matchDate "2026-01-10"
+    When I send a GET request to "/api/results?homeTeam=Nonexistent"
+    Then the response status should be 200
+    And the response should contain 0 results
 
   @positive
   Scenario: Get an existing result by id
