@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -206,48 +207,28 @@ class ResultServiceImplTest {
         ResultResponseDTO result = resultService.update(RESULT_ID, requestDto);
 
         assertThat(result).isEqualTo(responseDto);
-        assertThat(existing.getHomeScore()).isEqualTo(requestDto.getHomeScore());
-        assertThat(existing.getAwayScore()).isEqualTo(requestDto.getAwayScore());
+        verify(resultMapper).updateEntity(requestDto, existing);
         verify(resultRepository).save(existing);
     }
 
     @Test
-    void shouldPreserveResultIdWhenUpdating() {
+    void shouldDelegateFieldCopyingToMapperBeforeSaving() {
         Result existing = buildEntity();
         ResultRequestDTO requestDto = buildRequestDto();
         when(resultRepository.findById(RESULT_ID)).thenReturn(Optional.of(existing));
+        doAnswer(invocation -> {
+            Result target = invocation.getArgument(1);
+            target.setHomeTeam("Updated Home");
+            return null;
+        }).when(resultMapper).updateEntity(requestDto, existing);
         when(resultRepository.save(existing)).thenReturn(existing);
         when(resultMapper.toResponseDTO(existing)).thenReturn(buildResponseDto());
 
         resultService.update(RESULT_ID, requestDto);
 
-        assertThat(existing.getId()).isEqualTo(RESULT_ID);
-    }
-
-    @Test
-    void shouldUpdateAllMutableFieldsFromRequest() {
-        Result existing = buildEntity();
-        ResultRequestDTO requestDto = new ResultRequestDTO();
-        requestDto.setHomeTeam("Updated Home");
-        requestDto.setAwayTeam("Updated Away");
-        requestDto.setHomeScore(9);
-        requestDto.setAwayScore(8);
-        requestDto.setMatchDate(LocalDate.of(2026, 3, 1));
-        requestDto.setCompetition("Updated Competition");
-        requestDto.setVenue("Updated Venue");
-        when(resultRepository.findById(RESULT_ID)).thenReturn(Optional.of(existing));
-        when(resultRepository.save(existing)).thenReturn(existing);
-        when(resultMapper.toResponseDTO(existing)).thenReturn(buildResponseDto());
-
-        resultService.update(RESULT_ID, requestDto);
-
-        assertThat(existing.getHomeTeam()).isEqualTo("Updated Home");
-        assertThat(existing.getAwayTeam()).isEqualTo("Updated Away");
-        assertThat(existing.getHomeScore()).isEqualTo(9);
-        assertThat(existing.getAwayScore()).isEqualTo(8);
-        assertThat(existing.getMatchDate()).isEqualTo(LocalDate.of(2026, 3, 1));
-        assertThat(existing.getCompetition()).isEqualTo("Updated Competition");
-        assertThat(existing.getVenue()).isEqualTo("Updated Venue");
+        ArgumentCaptor<Result> captor = ArgumentCaptor.forClass(Result.class);
+        verify(resultRepository).save(captor.capture());
+        assertThat(captor.getValue().getHomeTeam()).isEqualTo("Updated Home");
     }
 
     @Test
@@ -268,6 +249,7 @@ class ResultServiceImplTest {
         assertThatThrownBy(() -> resultService.update(UNKNOWN_ID, requestDto))
                 .isInstanceOf(ResourceNotFoundException.class);
 
+        verify(resultMapper, never()).updateEntity(any(), any());
         verify(resultRepository, never()).save(any());
     }
 

@@ -15,6 +15,27 @@ The application starts on `http://localhost:8080`.
 - OpenAPI YAML: http://localhost:8080/v3/api-docs.yaml
 - Exported OpenAPI specification: [docs/openapi.json](docs/openapi.json), [docs/openapi.yaml](docs/openapi.yaml)
 
+## API-First
+
+`docs/openapi.yaml` (and its JSON equivalent) is the contract for the public API: every endpoint,
+schema, validation rule, and error response documented in the running Swagger UI must match it. New
+or changed endpoints are expected to update the contract, the controller annotations, the DTOs, and
+the Cucumber scenarios together — if any of them disagree, the change isn't done.
+
+The files under `docs/` are exported directly from the running application (`GET /v3/api-docs` and
+`/v3/api-docs.yaml`) rather than hand-authored ahead of the implementation, since the API already
+existed before this workflow was adopted. To regenerate them after a contract change:
+
+```bash
+mvn spring-boot:run
+curl -s http://localhost:8080/v3/api-docs      -o docs/openapi.json
+curl -s http://localhost:8080/v3/api-docs.yaml -o docs/openapi.yaml
+```
+
+Each operation has a stable `operationId` (`getAllResults`, `getResultById`, `createResult`,
+`updateResult`, `deleteResult`) so client code generated from the contract doesn't churn when
+descriptions change.
+
 ## Testing
 
 The project has two test levels:

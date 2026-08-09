@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -30,16 +31,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/results")
 @Tag(name = "Results", description = "Operations for managing match results")
+@RequiredArgsConstructor
 public class ResultController {
 
     private final ResultService resultService;
 
-    public ResultController(ResultService resultService) {
-        this.resultService = resultService;
-    }
-
     @GetMapping
-    @Operation(summary = "Get all results", description = "Returns every match result currently stored.")
+    @Operation(operationId = "getAllResults", summary = "Get all results", description = "Returns every match result currently stored.")
     @ApiResponse(responseCode = "200", description = "Results retrieved successfully",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                     array = @ArraySchema(schema = @Schema(implementation = ResultResponseDTO.class))))
@@ -48,7 +46,7 @@ public class ResultController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get a result by id", description = "Returns the match result associated with the specified identifier.")
+    @Operation(operationId = "getResultById", summary = "Get a result by id", description = "Returns the match result associated with the specified identifier.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Result found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ResultResponseDTO.class))),
@@ -62,7 +60,7 @@ public class ResultController {
     }
 
     @PostMapping
-    @Operation(summary = "Create a result", description = "Creates and persists a new match result.")
+    @Operation(operationId = "createResult", summary = "Create a result", description = "Creates and persists a new match result.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Result created",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ResultResponseDTO.class))),
@@ -75,7 +73,7 @@ public class ResultController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a result", description = "Fully updates an existing match result.")
+    @Operation(operationId = "updateResult", summary = "Update a result", description = "Fully updates an existing match result.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Result updated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ResultResponseDTO.class))),
@@ -92,7 +90,7 @@ public class ResultController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a result", description = "Deletes the match result associated with the specified identifier.")
+    @Operation(operationId = "deleteResult", summary = "Delete a result", description = "Deletes the match result associated with the specified identifier.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Result deleted", content = @Content),
             @ApiResponse(responseCode = "404", description = "Result not found",

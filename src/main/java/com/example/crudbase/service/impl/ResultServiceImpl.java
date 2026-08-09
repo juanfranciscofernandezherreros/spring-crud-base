@@ -7,20 +7,17 @@ import com.example.crudbase.mapper.ResultMapper;
 import com.example.crudbase.model.Result;
 import com.example.crudbase.repository.ResultRepository;
 import com.example.crudbase.service.ResultService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ResultServiceImpl implements ResultService {
 
     private final ResultRepository resultRepository;
     private final ResultMapper resultMapper;
-
-    public ResultServiceImpl(ResultRepository resultRepository, ResultMapper resultMapper) {
-        this.resultRepository = resultRepository;
-        this.resultMapper = resultMapper;
-    }
 
     @Override
     public List<ResultResponseDTO> findAll() {
@@ -45,13 +42,7 @@ public class ResultServiceImpl implements ResultService {
     @Override
     public ResultResponseDTO update(Long id, ResultRequestDTO dto) {
         Result existing = findResultOrThrow(id);
-        existing.setHomeTeam(dto.getHomeTeam());
-        existing.setAwayTeam(dto.getAwayTeam());
-        existing.setHomeScore(dto.getHomeScore());
-        existing.setAwayScore(dto.getAwayScore());
-        existing.setMatchDate(dto.getMatchDate());
-        existing.setCompetition(dto.getCompetition());
-        existing.setVenue(dto.getVenue());
+        resultMapper.updateEntity(dto, existing);
         Result updated = resultRepository.save(existing);
         return resultMapper.toResponseDTO(updated);
     }

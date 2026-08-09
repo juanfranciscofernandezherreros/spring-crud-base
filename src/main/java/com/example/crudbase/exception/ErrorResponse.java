@@ -1,9 +1,11 @@
 package com.example.crudbase.exception;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
 
 import java.time.Instant;
 
+@Getter
 @Schema(description = "Standard API error response")
 public class ErrorResponse {
 
@@ -28,25 +30,5 @@ public class ErrorResponse {
         this.error = error;
         this.message = message;
         this.path = path;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public int getStatus() {
-        return status;
-    }
-
-    public String getError() {
-        return error;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getPath() {
-        return path;
     }
 }
